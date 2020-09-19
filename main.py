@@ -16,7 +16,7 @@ def getData(sport, counter, table_data_tr):
     while (counter < len(table_data_tr) and table_data_tr[counter].find('a') != None):
         tr = table_data_tr[counter]
         u = User()
-        u.sport = sport
+        u.sport = sport.lower()
         u.name = ""
         u.position = ""
         u.phone = ""
@@ -86,9 +86,9 @@ def main():
         for tr in table_data_tr:
             counter += 1
             if tr.find('a') == None:
-                if (tr.find('th') != None and tr.th.text == sport):
+                if (tr.find('th') != None and tr.th.text.lower() == sport.lower()):
                     users = getData(sport, counter, table_data_tr)
-                elif tr.find('td') != None and tr.td.text == sport:
+                elif tr.find('td') != None and tr.td.text.lower() == sport.lower():
                     users = getData(sport, counter, table_data_tr)
 
 
