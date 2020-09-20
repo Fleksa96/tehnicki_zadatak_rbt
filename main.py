@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 from user import User
 
 #sport, counter - from which tr to start collecting users, table_data_tr - all tr-s from table
-def getData(sport, counter, table_data_tr):
+def getDataFromTr(sport, counter, table_data_tr):
     table_data_td = [] #this is for collecting users
     while (counter < len(table_data_tr) and table_data_tr[counter].find('a') != None):
         #if i got to the end of table i jump of while, if there is no a tag in tr it means i encountered the
@@ -66,6 +66,65 @@ def getData(sport, counter, table_data_tr):
     return table_data_td
 
 
+def getDataFromTables(tables, sport):
+
+    users = []
+
+    # one site has multiple tables
+    for table in tables:
+
+        # as soon as i get users array, i don't need to go through other tables
+        # and i just jump out of for loop
+        if users:
+            break
+
+        table_data_tr = table.find_all('tr')
+
+        counter = 0
+
+        for tr in table_data_tr:
+            counter += 1
+            # tr that does not have a tag is where i check for sport and start collecting items if
+            # that is the sport that i am looking for
+            if tr.find('a') == None:
+                if (tr.find('th') != None and tr.th.text.lower() == sport.lower()):
+                    # on one site first column is th not td tag
+                    users = getDataFromTr(sport, counter, table_data_tr)
+                    # as soon as i get users array, i don't need to go through other tables
+                    # and i just jump out of for loop
+                    break
+                elif tr.find('td') != None and tr.td.text.lower() == sport.lower():
+                    users = getDataFromTr(sport, counter, table_data_tr)
+                    # as soon as i get users array, i don't need to go through other tables
+                    # and i just jump out of for loop
+                    break
+    return users
+
+def getDataFromIframes(iframes, sport, session):
+    users = []
+    #searching users through tables in iframes
+    for ifrm in iframes:
+        if users:
+            break
+
+        if ifrm.has_attr('src'):
+            width = ifrm['width']
+            height = ifrm['height']
+            u = ifrm['src']
+            #if width or height is 0, i noticed that iframes had style tag
+            #with css visibility: hidden so i jump to another iframe
+            #if iframe does not have http or https in front of a link i jump to another iframe
+            if width == 0 or height == 0 or u.find('http') == -1:
+                continue
+            page = session.get(u)
+            soup = BeautifulSoup(page.content, 'html.parser')
+
+            tables = soup.find_all('table')
+            if tables:
+                users = getDataFromTables(tables, sport)
+
+    return users
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -82,9 +141,9 @@ def main():
     headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36"}
 
-    s = requests.Session()
-    s.headers.update(headers)
-    page = s.get(url)
+    session = requests.Session()
+    session.headers.update(headers)
+    page = session.get(url)
 
     soup = BeautifulSoup(page.content, 'html.parser')
 
@@ -92,35 +151,15 @@ def main():
 
     users = []
 
-    #one site has multiple tables
-    for table in tables:
+    #collecting data from tables
+    users = getDataFromTables(tables, sport)
 
-        #as soon as i get users array, i don't need to go through other tables
-        #and i just jump out of for loop
-        if users:
-            break
+    #if i did not find any users i proceed to with loading iframe source
+    if not users:
+        body = soup.find('body')
+        iframes = body.find_all('iframe')
+        users = getDataFromIframes(iframes, sport, session)
 
-        table_data_tr = table.find_all('tr')
-
-
-        counter = 0
-
-        for tr in table_data_tr:
-            counter += 1
-            #tr that does not have a tag is where i check for sport and start collecting items if
-            #that is the sport that i am looking for
-            if tr.find('a') == None:
-                if (tr.find('th') != None and tr.th.text.lower() == sport.lower()):
-                    #on one site first column is th not td tag
-                    users = getData(sport, counter, table_data_tr)
-                    # as soon as i get users array, i don't need to go through other tables
-                    # and i just jump out of for loop
-                    break
-                elif tr.find('td') != None and tr.td.text.lower() == sport.lower():
-                    users = getData(sport, counter, table_data_tr)
-                    # as soon as i get users array, i don't need to go through other tables
-                    # and i just jump out of for loop
-                    break
 
 
     #turning array of users to Json format
