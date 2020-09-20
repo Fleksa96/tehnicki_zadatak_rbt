@@ -89,6 +89,12 @@ def main():
 
     #one site has multiple tables
     for table in tables:
+
+        #as soon as i get users array, i don't need to go through other tables
+        #and i just jump out of for loop
+        if users:
+            break
+
         table_data_tr = table.find_all('tr')
 
 
@@ -102,9 +108,13 @@ def main():
                 if (tr.find('th') != None and tr.th.text.lower() == sport.lower()):
                     #on one site first column is th not td tag
                     users = getData(sport, counter, table_data_tr)
+                    # as soon as i get users array, i don't need to go through other tables
+                    # and i just jump out of for loop
                     break
                 elif tr.find('td') != None and tr.td.text.lower() == sport.lower():
                     users = getData(sport, counter, table_data_tr)
+                    # as soon as i get users array, i don't need to go through other tables
+                    # and i just jump out of for loop
                     break
 
 
