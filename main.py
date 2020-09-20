@@ -102,8 +102,10 @@ def main():
                 if (tr.find('th') != None and tr.th.text.lower() == sport.lower()):
                     #on one site first column is th not td tag
                     users = getData(sport, counter, table_data_tr)
+                    break
                 elif tr.find('td') != None and tr.td.text.lower() == sport.lower():
                     users = getData(sport, counter, table_data_tr)
+                    break
 
 
     #turning array of users to Json format
