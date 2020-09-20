@@ -79,7 +79,12 @@ def main():
 
     #collecting named arguments with ArgumentParser
 
-    page = requests.get(url)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36"}
+
+    s = requests.Session()
+    s.headers.update(headers)
+    page = s.get(url)
 
     soup = BeautifulSoup(page.content, 'html.parser')
 
