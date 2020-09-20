@@ -5,34 +5,42 @@
 import argparse
 import json
 import re
+import constant
 
 import requests
 from bs4 import BeautifulSoup
 from user import User
 
-
+#sport, counter - from which tr to start collecting users, table_data_tr - all tr-s from table
 def getData(sport, counter, table_data_tr):
-    table_data_td = []
+    table_data_td = [] #this is for collecting users
     while (counter < len(table_data_tr) and table_data_tr[counter].find('a') != None):
+        #if i got to the end of table i jump of while, if there is no a tag in tr it means i encountered the
+        #next tag in table
         tr = table_data_tr[counter]
         u = User()
+
+        #i did this only to have correct output in cmd
         u.sport = sport.lower()
         u.name = ""
         u.position = ""
         u.phone = ""
         u.email = ""
 
+        #on one test page name is given in th tag, so this will get name from there
+        #because down i am just getting td-s from tr
         if tr.find('th'):
             u.name = tr.th.text.replace("\n", "")
 
         tr = table_data_tr[counter].find_all('td')
         for td in tr:
             text = td.text.replace("\n", "").replace("\r", "").replace("\t", "").strip()
+            #names and email is given in a tag
             if(td.find('a')!=None and td.find('span') == None):
-                if re.match('^([A-Za-z\s]+)$', text):
+                if re.match(constant.REGEX_NAME, text):
                     u.name = text
                     continue
-                if re.match('^(@[a-z.]+)$', text):
+                if re.match(constant.REGEX_EMAIL, text):
                     u.email = text
                 elif td.a.get('href') != None:
                     x = td.a.get('href').split(':')
@@ -40,16 +48,18 @@ def getData(sport, counter, table_data_tr):
                 continue
             else:
 
-                if re.match('^([A-Za-z\s,\']+)$', text):
+                if re.match(constant.REGEX_POSITION, text):
                     u.position = text
                     continue
-            if re.match('^([0-9()\s-]+)$', text) or td.find('span') != None:
+            #i did not put this if in the else branch, because on one site there is phone
+            #given inside a tag and span tag, so this logic below covers that case
+            if re.match(constant.REGEX_PHONE, text) or td.find('span') != None:
                 if(td.find('span') != None):
                     u.phone = td.span.text.replace("\n", "").replace("\r", "").replace("\t", "")
                 else:
                     u.phone = text
                 continue
-
+        #adding to array of users
         table_data_td.append(u.__dict__)
         counter += 1
 
@@ -67,7 +77,7 @@ def main():
     url = args.url
     sport = args.sport
 
-
+    #collecting named arguments with ArgumentParser
 
     page = requests.get(url)
 
@@ -77,6 +87,7 @@ def main():
 
     users = []
 
+    #one site has multiple tables
     for table in tables:
         table_data_tr = table.find_all('tr')
 
@@ -85,14 +96,17 @@ def main():
 
         for tr in table_data_tr:
             counter += 1
+            #tr that does not have a tag is where i check for sport and start collecting items if
+            #that is the sport that i am looking for
             if tr.find('a') == None:
                 if (tr.find('th') != None and tr.th.text.lower() == sport.lower()):
+                    #on one site first column is th not td tag
                     users = getData(sport, counter, table_data_tr)
                 elif tr.find('td') != None and tr.td.text.lower() == sport.lower():
                     users = getData(sport, counter, table_data_tr)
 
 
-
+    #turning array of users to Json format
     jsonString = json.dumps(users)
 
     print(jsonString)
