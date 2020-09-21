@@ -134,8 +134,10 @@ def getTablesFromTrOptArg(soup, html_element, html_element_id, html_element_inde
         temp = soup.find(html_element, attrs={'id': html_element_id})
         if temp != None and temp:
             tables.append(temp.find_previous('table'))
-    # elif html_element_index != None:
-    #     tables = soup.find(html_element, attrs={'id': html_element_index}).find_previous('table')
+    elif html_element_index != None:
+        temp = soup.find_all(html_element)
+        if len(temp) > html_element_index:
+            tables.append(temp[html_element_index].find_previous('table'))
     else:
         tr = soup.find_all(html_element, attrs={'class': html_element_class})
         if tr != None:
@@ -156,8 +158,10 @@ def getTablesOptionalArguments(soup, html_element, html_element_id, html_element
             temp = soup.find(html_element, attrs={'id': html_element_id})
             if temp != None and temp:
                 tables.append(temp)
-        # elif html_element_index != None:
-        #     tables = soup.find(html_element, attrs={'id': html_element_index})
+        elif html_element_index != None:
+            temp = soup.find_all(html_element)
+            if len(temp) > html_element_index:
+                tables.append(temp[html_element_index])
         else:
             temp = soup.find_all(html_element, attrs={'class': html_element_class})
             if temp != None and temp:
@@ -172,7 +176,7 @@ def main():
     parser.add_argument('--sport')
     parser.add_argument('--html_element')
     parser.add_argument('--html_element_id')
-    parser.add_argument('--html_element_index')
+    parser.add_argument('--html_element_index', type=int)
     parser.add_argument('--html_element_class')
     args = parser.parse_args()
 

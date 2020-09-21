@@ -1,14 +1,17 @@
 tehnicki_zadatak_rbt
 
 
-The program is run as described in task description.
-{
-temporarily:
-1. just --url and --sport parameters can be used
+Input format:
 
-Tests:
-1. test: --url=http://www.goseattleu.com/StaffDirectory.dbml --sport=Volleyball
-2. test: --url=http://www.astateredwolves.com/ViewArticle.dbml?ATCLID=207138 --sport=Volleyball
-3. test: --url=https://athletics.arizona.edu/StaffDirectory/index.asp --sport=Volleyball
-}
+python scrape.py --url=page_url --sport=sport_name
+or:
+
+python scrape.py --url=page_url --sport=sport_name --html-element=element_name --html-element-id=element_id
+or:
+
+python scrape.py --url=page_url --sport=sport_name --html-element=element_name --html-element-index=element_index 
+or:
+
+python scrape.py --url=page_url --sport=sport_name --html-element=element_name --html-element-class=element_class
+
 
