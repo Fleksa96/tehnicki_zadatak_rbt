@@ -34,40 +34,35 @@ def get_data_from_tr(sport, counter, table_data_tr):
         # because down i am just getting <td>-s from <tr>
         if tr.find('th'):
             u.name = tr.th.text.replace("\n", "")
+            flag_name = True
+        else:
+            flag_name = False
 
         tr = table_data_tr[counter].find_all('td')
         for td in tr:
+
             text = td.text.replace("\n", "")\
                 .replace("\r", "").replace("\t", "").strip()
-            # names and email is given in <a> tag
-            if (td.find('a') is not None and td.find('span') is None)\
-                    or td is tr[0]:
-                if re.match(constant.REGEX_NAME, text):
-                    u.name = text
-                    continue
+            if td is tr[0] and not flag_name:
+                u.name = text
+            elif (td is tr[1] and not flag_name) \
+                    or (flag_name and td is tr[0]):
+                u.position = text
+            elif td.find('a') is not None \
+                    and not re.match(constant.REGEX_PHONE, text):
                 if re.match(constant.REGEX_EMAIL, text):
                     u.email = text
                 elif td.a.get('href') is not None:
                     x = td.a.get('href').split(':')
                     u.email = x[-1]
-                continue
-            else:
-
-                if re.match(constant.REGEX_POSITION, text):
-                    u.position = text
-                    continue
-            # i did not put this if in the else branch,
-            # because on one site there is phone
-            # given inside a tag and <span> tag,
-            # so this logic below covers that case
-            if re.match(constant.REGEX_PHONE, text)\
-                    or td.find('span') is not None:
+            elif re.match(constant.REGEX_PHONE, text):
                 if (td.find('span') is not None):
                     u.phone = td.span.text.replace("\n", "")\
                         .replace("\r", "").replace("\t", "")
                 else:
                     u.phone = text
-                continue
+
+
         # adding to array of users
         table_data_td.append(u.__dict__)
         counter += 1
@@ -272,8 +267,9 @@ def main():
     # turning array of users to Json format
     if not users:
         print('There are no data for you search parameters')
-    json_string = json.dumps(users, indent=4)
-    print(json_string)
+    else:
+        json_string = json.dumps(users, indent=4)
+        print(json_string)
 
 
 
